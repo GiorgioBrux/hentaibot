@@ -10,7 +10,9 @@
         ],
         "consistent-return": "off",
         "no-console": "off",
-        "no-restricted-syntax": "off"
+        "no-restricted-syntax": "off",
+        "node/no-unpublished-require": "off"
+
     },
     "globals": {
         "Reddit": "readonly",
