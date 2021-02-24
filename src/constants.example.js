@@ -45,7 +45,7 @@ module.exports = {
         },
         version(version, errcode) {
             return {
-                description: `Running on \`${version.substring(0, 7)}${errcode ? '-develop' : undefined}\``,
+                description: `Running on \`${version.substring(0, 7)}${errcode ? '-develop' : ''}\``,
                 color: 15158332
             };
         },
