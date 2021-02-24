@@ -1,0 +1,13 @@
+{
+    "name": "HentaiBot",
+    "description": "A WIP fully featured hentai bot for discord.",
+    "repository": "https://github.com/giorgiobrux/Hentaibot",
+    "logo": "https://i.imgur.com/GIf9ru8.png",
+    "env": {
+        "settings": {
+            "description": "The bot configuration.",
+            "required": true,
+            "value": ""
+        }
+    }
+}

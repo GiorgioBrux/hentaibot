@@ -1,0 +1,23 @@
+{
+    "extends": ["airbnb", "prettier", "plugin:node/recommended"],
+    "plugins": ["prettier"],
+    "rules": {
+        "prettier/prettier": [
+            "warn",
+            {
+                "endOfLine": "auto"
+            }
+        ],
+        "consistent-return": "off",
+        "no-console": "off",
+        "no-restricted-syntax": "off"
+    },
+    "globals": {
+        "Reddit": "readonly",
+        "Mongo": "readonly",
+        "Discord": "readonly"
+    },
+    "parserOptions": {
+        "ecmaVersion": 2021
+    }
+}
