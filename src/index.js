@@ -14,7 +14,7 @@ async function init() {
     scheduled.reddit.start();
 
     Discord.on('message', async (msg) => {
-        if (msg.author.bot || msg.author.id !== constants.bot_userid) return;
+        if (msg.author.bot || msg.author.id === constants.bot_userid) return;
         if (!constants.commands_channelids.includes(msg.channel.id)) return;
         if (
             msg.attachments.size > 0 ||
