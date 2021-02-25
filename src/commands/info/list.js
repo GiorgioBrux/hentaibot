@@ -10,6 +10,6 @@ module.exports = {
 
         const names = Object.keys(alpha).join('\n');
         const upvotes = Object.values(alpha).join('\n');
-        msg.reply({ embed: constants.embeds.list(names, upvotes) });
+        msg.reply(constants.commands.list.embeds.list(names, upvotes));
     }
 };

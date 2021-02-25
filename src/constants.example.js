@@ -26,7 +26,7 @@ module.exports = {
         },
         generic_error(err) {
             return {
-                title: '❌ There was an error executing this command',
+                title: ':x: There was an error executing this command',
                 description: err,
                 color: 15158332
             };
@@ -41,21 +41,6 @@ module.exports = {
                         : ``
                 }**`,
                 color: 9241214
-            };
-        },
-        version(version, errcode) {
-            return {
-                description: `Running on \`${version.substring(0, 7)}${errcode ? '-develop' : ''}\``,
-                color: 15158332
-            };
-        },
-        list(names, upvotes) {
-            return {
-                color: 3447003,
-                fields: [
-                    { name: 'Subreddits', value: names, inline: true },
-                    { name: 'Upvotes needed', value: upvotes, inline: true }
-                ]
             };
         }
     },
@@ -84,6 +69,10 @@ module.exports = {
             name: `srandom`,
             aliases: ['srnd'],
             description: `Get a random image from sankaku. Supports tags in the form of \`+yuri -video\`.`,
+            args: {
+                required: false,
+                min: 0
+            },
             errors: {
                 no_link: `I'm sorry master, but I found a premium or deleted post. Please try again.`,
                 generic(err) {
@@ -97,11 +86,40 @@ module.exports = {
         help: {
             name: `help`,
             description: `Prints an help embed with all commands.`,
-            usage: `[command]`,
+            aliases: ['commands'],
+            usage: `[command_name]`,
             args: {
                 required: false,
                 min: 0,
                 max: 1
+            },
+            help_all(commandNames, usages) {
+                return {
+                    embed: {
+                        title: "Here's all the commands, master",
+                        color: 16580705,
+                        fields: [
+                            { name: 'Command', value: commandNames, inline: true },
+                            { name: 'Usage', value: usages, inline: true }
+                        ]
+                    }
+                };
+            },
+            help_single(commandName) {
+                return {
+                    embed: {
+                        title: `Here's what you need to know:`,
+                        color: 2123412,
+                        fields: [
+                            { name: 'Description', value: module.exports.commands[commandName].description },
+                            {
+                                name: 'Usage',
+                                value: `${module.exports.prefix}${commandName} ${module.exports.commands[commandName].usage}`,
+                                inline: true
+                            }
+                        ]
+                    }
+                };
             }
         },
         list: {
@@ -110,6 +128,19 @@ module.exports = {
             args: {
                 required: false,
                 max: 0
+            },
+            embeds: {
+                list(names, upvotes) {
+                    return {
+                        embed: {
+                            color: 3447003,
+                            fields: [
+                                { name: 'Subreddits', value: names, inline: true },
+                                { name: 'Upvotes needed', value: upvotes, inline: true }
+                            ]
+                        }
+                    };
+                }
             }
         },
         version: {
@@ -118,6 +149,16 @@ module.exports = {
             args: {
                 required: false,
                 max: 0
+            },
+            embeds: {
+                version(version, errcode) {
+                    return {
+                        embed: {
+                            description: `Running on \`${version.substring(0, 7)}${errcode ? '-develop' : '-github'}\``,
+                            color: 15158332
+                        }
+                    };
+                }
             }
         }
     },
