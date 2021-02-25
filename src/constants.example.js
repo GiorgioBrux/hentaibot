@@ -20,7 +20,8 @@ module.exports = {
             required_error(required, usage, command) {
                 return {
                     title: `❌ This command requires ${required || '0'} ${required === 1 ? 'arg' : 'args'}.`,
-                    description: `Usage: ${module.exports.prefix}${command} ${usage || ''}`
+                    description: `Usage: ${module.exports.prefix}${command} ${usage || ''}`,
+                    color: 15158332
                 };
             }
         },
@@ -61,13 +62,14 @@ module.exports = {
                 },
                 no_image: "I'm sorry, I got a post but it doesn't contain any image :(",
                 generic(err) {
-                    return `I'm sorry, something went wrong: ${err.message}. Are you sure the subreddit exists and isn't banned?`;
+                    return `I'm sorry, something went wrong: ${err.response.statusCode} ${err.response.statusMessage}. Are you sure the subreddit exists and isn't banned?`;
                 }
             }
         },
         srandom: {
             name: `srandom`,
             aliases: ['srnd'],
+            usage: ['[amount] [tags]'],
             description: `Get a random image from sankaku. Supports tags in the form of \`+yuri -video\`.`,
             args: {
                 required: false,
@@ -93,33 +95,45 @@ module.exports = {
                 min: 0,
                 max: 1
             },
-            help_all(commandNames, usages) {
-                return {
-                    embed: {
-                        title: "Here's all the commands, master",
-                        color: 16580705,
-                        fields: [
-                            { name: 'Command', value: commandNames, inline: true },
-                            { name: 'Usage', value: usages, inline: true }
-                        ]
-                    }
-                };
-            },
-            help_single(commandName) {
-                return {
-                    embed: {
-                        title: `Here's what you need to know:`,
-                        color: 2123412,
-                        fields: [
-                            { name: 'Description', value: module.exports.commands[commandName].description },
-                            {
-                                name: 'Usage',
-                                value: `${module.exports.prefix}${commandName} ${module.exports.commands[commandName].usage}`,
-                                inline: true
-                            }
-                        ]
-                    }
-                };
+            embeds: {
+                notFound(commandName) {
+                    return {
+                        embed: {
+                            title: `:x: Command \`${commandName}\` does not exist`,
+                            color: 15158332
+                        }
+                    };
+                },
+                help_all(commandNames, usages) {
+                    return {
+                        embed: {
+                            title: "Here's all the commands, master",
+                            color: 16580705,
+                            fields: [
+                                { name: 'Command', value: commandNames, inline: true },
+                                { name: 'Usage', value: usages, inline: true }
+                            ]
+                        }
+                    };
+                },
+                help_single(commandName) {
+                    return {
+                        embed: {
+                            title: `Here's what you need to know:`,
+                            color: 2123412,
+                            fields: [
+                                { name: 'Description', value: module.exports.commands[commandName].description },
+                                {
+                                    name: 'Usage',
+                                    value: `${module.exports.prefix}${commandName} ${
+                                        module.exports.commands[commandName].usage || ''
+                                    }`,
+                                    inline: true
+                                }
+                            ]
+                        }
+                    };
+                }
             }
         },
         list: {

@@ -7,9 +7,7 @@ module.exports = {
         msg.channel.send(`${constants.lovmessages[Math.floor(Math.random() * constants.lovmessages.length)]}`);
         let subreddit;
         async function go() {
-            if (args.constructor === Array && args[1] !== undefined)
-                return msg.reply(`Sorry master, you can specify only one arg [subreddit_name]`);
-            if (args[1] === undefined && args[0] !== undefined) {
+            if (args[0] !== undefined) {
                 subreddit = args[0].replace(/r\//, '');
             } else {
                 const array = Object.keys(constants.subreddits);
