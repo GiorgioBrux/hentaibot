@@ -37,12 +37,35 @@ async function init() {
                 (!args[0] && command.args.required) ||
                 (typeof command.args.min !== 'undefined' &&
                     command.args.min !== 0 &&
-                    typeof args[command.args.min - 1] === 'undefined') ||
-                (typeof command.args.max !== 'undefined' && typeof args[command.args.max] !== 'undefined')
+                    typeof args[command.args.min - 1] === 'undefined')
             )
-                return msg.reply({
-                    embed: constants.embeds.args.required_error(command.args.min, command.usage, command.name)
-                });
+                return msg.reply(constants.embeds.args.not_enough_error(command.args.min, command.usage, command.name));
+            if (typeof command.args.max !== 'undefined' && typeof args[command.args.max] !== 'undefined')
+                return msg.reply(constants.embeds.args.too_many_error(command.args.max, command.usage, command.name));
+            // Check type
+            if (command.args.type) {
+                // @TODO: Scroll through the argument instead of the type, and if type[i] doesn't exist, use the last used?
+                for (const [i, v] of command.args.type.entries()) {
+                    if (typeof args[i] === 'undefined') break;
+                    switch (v) {
+                        case 'number':
+                            if (!/^\d+$/.test(args[i]))
+                                return msg.reply(
+                                    constants.embeds.args.wrong_type_error(
+                                        util.numbers.number_to_ordinal(i + 1),
+                                        i,
+                                        command.usage,
+                                        command
+                                    )
+                                );
+                            break;
+                        case 'all':
+                            break;
+                        default:
+                            return msg.reply(constants.embeds.args.no_type_error(v));
+                    }
+                }
+            }
         }
 
         try {

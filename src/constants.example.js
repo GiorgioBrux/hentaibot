@@ -17,11 +17,40 @@ module.exports = {
     },
     embeds: {
         args: {
-            required_error(required, usage, command) {
+            not_enough_error(required, usage, commandName) {
                 return {
-                    title: `❌ This command requires ${required || '0'} ${required === 1 ? 'arg' : 'args'}.`,
-                    description: `Usage: ${module.exports.prefix}${command} ${usage || ''}`,
-                    color: 15158332
+                    embed: {
+                        title: `:x: This command requires ${required || '0'} ${required === 1 ? 'arg' : 'args'}.`,
+                        description: `Usage: ${module.exports.prefix}${commandName} ${usage || ''}`,
+                        color: 15158332
+                    }
+                };
+            },
+            too_many_error(needed, usage, commandName) {
+                return {
+                    embed: {
+                        title: `:x: This command can have a maximum of ${needed} ${needed === 1 ? 'arg' : 'args'}.`,
+                        description: `Usage: ${module.exports.prefix}${commandName} ${usage || ''}`,
+                        color: 15158332
+                    }
+                };
+            },
+            wrong_type_error(numberOrdinal, argIndex, usage, command) {
+                return {
+                    embed: {
+                        title: `:x: This command requires the ${numberOrdinal} argument to be a \`${command.args.type[argIndex]}\`.`,
+                        description: `Usage: ${module.exports.prefix}${command.name} ${usage || ''}`,
+                        color: 15158332
+                    }
+                };
+            },
+            no_type_error(type) {
+                return {
+                    embed: {
+                        title: `:x: Internal error`,
+                        description: `Invalid arg type: ${type}`,
+                        color: 15158332
+                    }
                 };
             }
         },
