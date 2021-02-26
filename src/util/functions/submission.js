@@ -20,28 +20,25 @@ module.exports = {
             // console.log(`Url: ${submission.url}`)
             let message;
             try {
-                const ext = submission.url.match(/(\.\w{3,4})($|\?)/gim)[0];
+                const rex = new RegExp('\\.([^/#?]+)([#?][^/]*)?$');
+                rex.test(submission.url);
+                const ext = `.${RegExp.$1}`;
+                // const ext = submission.url.match(/\.([^/#?]+)([#?][^/]*)?$/g)[0];
+                // console.log(`Ext: ${ext}`);
                 if (!ext)
                     console.log(
                         `${submission?.subreddit?.display_name} > ${submission?.id} > Error > No extension: ${submission.url}`
                     );
-                message = await msg
-                    .send({
-                        files: [
-                            {
-                                attachment: submission.url,
-                                name: (submission?.id ? submission.id : 'HGuy') + ext
-                            }
-                        ]
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                        msg.send(submission.url);
-                    })
-                    .catch(() => {
-                        module.exports.send(submission, msg);
-                    });
+                message = await msg.send({
+                    files: [
+                        {
+                            attachment: submission.url,
+                            name: (submission?.id ? submission.id : 'HGuy') + ext
+                        }
+                    ]
+                });
             } catch (e) {
+                console.log(`Submission sending error: ${e}`);
                 message = await msg.send(submission.url);
             }
             module.exports.add_reacts(message);
