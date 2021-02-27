@@ -82,7 +82,8 @@ module.exports = {
             args: {
                 required: false,
                 min: 0,
-                max: 1
+                max: 1,
+                type: ['string']
             },
             description: 'Gets a (not so) random image from a subreddit or from its subreddit list.',
             errors: {
