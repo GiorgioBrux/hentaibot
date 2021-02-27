@@ -104,7 +104,29 @@ module.exports = {
                 required: false,
                 min: 0
             },
+            config: {
+                maxImages: '100'
+            },
+            misc: {
+                multi_done(number) {
+                    return `${
+                        number !== 0
+                            ? `:warning: ${number} image${number > 1 ? 's' : ''} won't be posted because ${
+                                  number > 1 ? 'they are' : 'it is'
+                              } deleted or premium only.`
+                            : `:white_check_mark: No premium or deleted post found.`
+                    }`;
+                }
+            },
             errors: {
+                too_many_images(maxImages) {
+                    return {
+                        embed: {
+                            title: `:x: The maximum number of images is ${maxImages}/command`,
+                            color: 15158332
+                        }
+                    };
+                },
                 no_link: `I'm sorry master, but I found a premium or deleted post. Please try again.`,
                 generic(err) {
                     return `I'm sorry master, but something went wrong with the search: ${err}`;

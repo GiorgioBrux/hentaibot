@@ -29,7 +29,7 @@ module.exports = {
                     console.log(
                         `${submission?.subreddit?.display_name} > ${submission?.id} > Error > No extension: ${submission.url}`
                     );
-                if (ext === '.gifv') throw new Error();
+                if (ext === '.gifv') return Promise.reject(Error());
                 message = await msg.send({
                     files: [
                         {
