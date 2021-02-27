@@ -33,6 +33,7 @@ async function init() {
         if (!command) return;
 
         if (command.args) {
+            let fn;
             if (
                 (!args[0] && command.args.required) ||
                 (typeof command.args.min !== 'undefined' &&
@@ -44,20 +45,25 @@ async function init() {
                 return msg.reply(constants.embeds.args.too_many_error(command.args.max, command.usage, command.name));
             // Check type
             if (command.args.type) {
+                fn = function sendError(i) {
+                    msg.reply(
+                        constants.embeds.args.wrong_type_error(
+                            util.numbers.number_to_ordinal(i + 1),
+                            i,
+                            command.usage,
+                            command
+                        )
+                    );
+                };
                 // @TODO: Scroll through the argument instead of the type, and if type[i] doesn't exist, use the last used?
                 for (const [i, v] of command.args.type.entries()) {
                     if (typeof args[i] === 'undefined') break;
                     switch (v) {
                         case 'number':
-                            if (!/^\d+$/.test(args[i]))
-                                return msg.reply(
-                                    constants.embeds.args.wrong_type_error(
-                                        util.numbers.number_to_ordinal(i + 1),
-                                        i,
-                                        command.usage,
-                                        command
-                                    )
-                                );
+                            if (!/^\d+$/.test(args[i])) return fn(i);
+                            break;
+                        case 'string':
+                            if (/^\d+$/.test(args[i])) return fn(i);
                             break;
                         case 'all':
                             break;
