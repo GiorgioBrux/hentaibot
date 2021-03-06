@@ -2,7 +2,7 @@ module.exports = {
     prefix: '.',
     conditions: ['png', 'jpeg', 'gif', 'jpg', 'mp4', 'imgur', 'redgif', 'gallery', 'webm'],
     bot_userid: '',
-    token: '',
+    discordToken: '',
     mongodbUrl: '', // Only useful for selfbots
     commands_channelids: ['example'],
     reddit: {

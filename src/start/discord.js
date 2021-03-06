@@ -42,7 +42,7 @@ const client = new Client({
 
 async function start() {
     try {
-        await client.login(constants.token);
+        await client.login(constants.discordToken);
         console.log(`Connected successfully to discord!`);
         client.commands = new Collection();
         const commandFolders = fs.readdirSync(path.resolve(__dirname, `../commands/`));
