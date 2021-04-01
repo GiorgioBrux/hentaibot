@@ -104,7 +104,7 @@ module.exports = {
             name: `srandom`,
             aliases: ['srnd'],
             usage: ['[amount] [tags]'],
-            description: `Get a random image from sankaku. Supports tags in the form of \`+yuri -video\`.`,
+            description: `Get a random image from sankaku. Supports tags in the form of \`yuri -video\`.`,
             args: {
                 required: false,
                 min: 0
