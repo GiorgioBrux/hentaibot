@@ -48,6 +48,6 @@ module.exports = {
     async add_reacts(msg) {
         await msg.react('😳');
         await msg.react('😐');
-        await msg.react('😞');
+        msg.react('😞');
     }
 };
