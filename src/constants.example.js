@@ -5,6 +5,10 @@ module.exports = {
     discordToken: '',
     mongodbUrl: '', // Only useful for selfbots
     commands_channelids: ['example'],
+    sankaku: {
+        login: '',
+        password: ''
+    },
     reddit: {
         config: {
             userAgent: 'nodejs/app by /u/yourname',

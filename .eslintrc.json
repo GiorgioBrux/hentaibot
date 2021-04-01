@@ -17,7 +17,8 @@
     "globals": {
         "Reddit": "readonly",
         "Mongo": "readonly",
-        "Discord": "readonly"
+        "Discord": "readonly",
+        "Sankaku": "readonly"
     },
     "parserOptions": {
         "ecmaVersion": 2021

@@ -1,26 +1,11 @@
-// @TODO: Sankaku oauth2
-
-// eslint-disable-next-line no-unused-vars
-const config = {
-    client: {
-        id: 'sankaku-web-app',
-        secret: ''
-    },
-    auth: {
-        tokenHost: 'https://login.sankakucomplex.com',
-        tokenPath: '/auth/token'
-    }
-};
+const { Client } = require('sankaku-client');
+const constants = require('../constants.js');
 
 async function start() {
     try {
+        const client = new Client();
+        await client.login({ login: constants.sankaku.login, password: constants.sankaku.password });
         console.log(`Connected successfully to sankaku!`);
-        // eslint-disable-next-line no-undef
-        const accessToken = await client.getToken(tokenParams, {
-            json: true,
-            redirectURI: 'https://beta.sankakucomplex.com/sso/callback'
-        });
-        return accessToken;
     } catch (e) {
         throw new Error(`Couldn't connect to sankaku: ${e}. Exiting...`);
     }

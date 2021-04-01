@@ -1,6 +1,7 @@
 const reddit = require('./start/reddit');
 const database = require('./start/database.js');
 const discord = require('./start/discord.js');
+const sankaku = require('./start/sankaku.js');
 
 const util = require('./util/util.js');
 const constants = require('./constants');
@@ -10,6 +11,7 @@ async function init() {
     global.Mongo = await database.start();
     global.Discord = await discord.start();
     global.Reddit = await reddit.start();
+    global.Sankaku = await sankaku.start();
 
     scheduled.reddit.start();
 
