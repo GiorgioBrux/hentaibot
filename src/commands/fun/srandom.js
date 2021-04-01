@@ -10,7 +10,7 @@ module.exports = {
             );
 
         msg.channel.send(constants.lovmessages[Math.floor(Math.random() * constants.lovmessages.length)]);
-        Sankaku.searchSubmissions({ limit: amount, tags: args.join(' ') })
+        Sankaku.searchSubmissions({ order_by: 'random', amount, tags: args.join(' ') })
             .then((response) => {
                 if (amount !== '1') {
                     let counter = 0;
