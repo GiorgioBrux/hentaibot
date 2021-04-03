@@ -24,7 +24,7 @@
         "discord.js-light": "github:GiorgioBrux/discord.js-light",
         "image-hash": "^4.0.1",
         "mongodb": "^3.6.4",
-        "node-gyp": "^7.1.0",
+        "node-gyp": "^8.0.0",
         "sankaku-client": "^1.0.0",
         "snoowrap": "^1.22.0"
     },
