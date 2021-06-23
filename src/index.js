@@ -87,12 +87,13 @@ async function init() {
     Discord.on('raw', (event) => {
         // @TODO: Reaction system
         if (event.t === 'MESSAGE_REACTION_ADD' || event.t === 'MESSAGE_REACTION_REMOVE') {
-            console.log(`event`);
             const reaction = event.d.emoji;
             const userID = event.d.user_id;
             const messageID = event.d.message_id;
             const guildID = event.d.guild_id;
             let emoj;
+
+            if (userID === constants.bot_userid) return;
 
             switch (reaction.name) {
                 case '😳':
