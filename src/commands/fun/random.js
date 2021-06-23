@@ -4,7 +4,7 @@ const util = require('../../util/util');
 module.exports = {
     async execute(msg, args) {
         // @TODO: Request more images in same command
-        msg.channel.send(`${constants.lovmessages[Math.floor(Math.random() * constants.lovmessages.length)]}`);
+        await msg.channel.send(`${constants.lovmessages[Math.floor(Math.random() * constants.lovmessages.length)]}`);
         let subreddit;
         async function go() {
             if (args[0] !== undefined) {

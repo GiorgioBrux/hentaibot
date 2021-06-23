@@ -23,9 +23,55 @@ async function init() {
             msg.attachments.size > 0 ||
             msg.content.includes('https://www.redgifs.com/watch/') ||
             (msg.content.includes('https://') && constants.conditions.some((e1) => msg.content.includes(e1)))
-        )
-            return util.submission.add_reacts(msg);
+        ) {
+            let url;
+            if (msg.attachments.size > 0) {
+                if (msg.attachments.size === 1) {
+                    url = msg.attachments.array()[0].url;
+                } else {
+                    url = [];
+                    for (const attachment of msg.attachments.array()) {
+                        url.push(attachment.url);
+                    }
+                }
+            }
+            if (!url) url = msg.content;
 
+            console.log(url);
+            const hash = await util.submission.get_hash(url);
+            console.log(hash);
+
+            const urldoc = await Mongo.db('hentaibot').collection(msg.guild.id).find({ url }).toArray();
+            const hashdoc = await Mongo.db('hentaibot').collection(msg.guild.id).find({ hash }).toArray();
+
+            console.log(urldoc);
+            console.log(hashdoc);
+
+            if (urldoc.length > 0 || (hash && hashdoc.length > 0 && !url?.includes('redgif'))) {
+                console.log(`${msg.guild.id} > ${msg.id} > Duplicate`);
+                return msg.reply({
+                    embed: constants.embeds.duplicate(
+                        urldoc[0]?.msgid || hashdoc[0]?.msgid,
+                        msg.guild.id,
+                        msg.channel.id
+                    )
+                });
+            }
+            Mongo.db('hentaibot')
+                .collection(msg.guild.id)
+                .insertOne({
+                    msgid: msg.id,
+                    sentby: msg.author.id,
+                    reactions: {
+                        flushed: [],
+                        neutral: [],
+                        disappointed: []
+                    },
+                    url: url || msg.content,
+                    hash: await util.submission.get_hash(url || msg.content)
+                });
+            return util.submission.add_reacts(msg);
+        }
         const args = msg.content.slice(constants.prefix.length).trim().split(/ +/);
         const commandName = args.shift().toLowerCase();
         if (!msg.content.startsWith(constants.prefix)) return;

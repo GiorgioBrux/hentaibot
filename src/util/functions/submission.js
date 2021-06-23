@@ -7,8 +7,6 @@ module.exports = {
         // @TODO: Check status (404?) of pics/videos before sending
         if (!submission.url || !constants.conditions.some((e1) => submission.url.includes(e1))) return 1;
 
-        if (submission.url.includes('https://imgur.com/'))
-            submission.url = `${submission.url.replace(/https:\/\/im/, 'https://i.im')}.jpg`; // Album img to text
         if (submission.url.includes('https://www.reddit.com/gallery/')) {
             const array = await JSON.parse(JSON.stringify(submission.media_metadata));
             const messages = [];
@@ -53,7 +51,7 @@ module.exports = {
             console.log(`Submission sending error: ${e}`);
             message = await msg.send(submission.url);
         }
-        module.exports.add_reacts(message);
+        await module.exports.add_reacts(message);
         return [message];
     },
     async add_reacts(msg) {
@@ -62,6 +60,7 @@ module.exports = {
         msg.react('😞');
     },
     async get_hash(link) {
+        if (!link || link.isArray) return null;
         return new Promise((resolve, reject) => {
             try {
                 imageHash(link, 16, true, (err, data) => resolve(data));
@@ -69,5 +68,9 @@ module.exports = {
                 reject(e);
             }
         });
+    },
+    async sanity_check(url) {
+        if (url.includes('https://imgur.com/')) url = `${url.replace(/https:\/\/im/, 'https://i.im')}.jpg`; // Album img to text
+        if (url.includes('imgur') && url.includes('gifv')) url = url.replace(/gifv/, 'gif');
     }
 };

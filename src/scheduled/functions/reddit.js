@@ -24,12 +24,7 @@ module.exports = {
             }
         }, constants.reddit.search_timeout * 60 * 1000);
     },
-    async work(submission, upsNeeded, orgSubreddit, orgId) {
-        if (orgId) submission.id = [submission.id, orgId];
-        if (orgSubreddit) {
-            submission.subreddit_name_prefixed = orgSubreddit;
-            submission.subreddit.display_name = orgSubreddit.substring(2);
-        }
+    async work(submission, upsNeeded) {
         if (submission.ups < upsNeeded || !submission.url) return;
 
         // Check if it's a crosspost
@@ -41,14 +36,12 @@ module.exports = {
             // if (!submission.crosspost_parent_list[0]) return console.log(`${submission.subreddit.display_name} > ${submission.id} > Error > No id crosspost: ${JSON.stringify(submission)}`);
             const { id } = JSON.parse(JSON.stringify(submission.crosspost_parent_list))[0];
             const result = await Reddit.getSubmission(id).fetch();
-            // console.log(`found!: ${JSON.stringify(result)}`);
-            // console.log("Finished fetching the original post,");
-            return module.exports.work(result, upsNeeded, submission.subreddit_name_prefixed, submission.id);
+            result.id = [result.id, submission.id];
+            result.subreddit_name_prefixed = submission.subreddit_name_prefixed;
+            submission = result;
         }
-        if (submission.url.includes('https://imgur.com/'))
-            submission.url = `${submission.url.replace(/https:\/\/im/, 'https://i.im')}.jpg`; // Album img to text
-        if (submission.url.includes('imgur') && submission.url.includes('gifv'))
-            submission.url = submission.url.replace(/gifv/, 'gif');
+        submission.url = util.submission.sanity_check(submission.url);
+
         const imageLinks = [];
         const hashes = [];
         if (await submission.url.includes('https://www.reddit.com/gallery/'))
@@ -74,14 +67,18 @@ module.exports = {
         channel: for await (const id of constants.reddit.channel_ids) {
             const channel = await Discord.channels.cache.get(id);
 
-            if (await Mongo.db('hentaibot').collection(channel.guild.id).countDocuments({ redditid: submission.id })) {
+            if (
+                await Mongo.db('hentaibot')
+                    .collection(channel.guild.id)
+                    .countDocuments({ reddit: { id: submission.id } })
+            ) {
                 console.log(
                     `${channel.guild.id} > ${submission.subreddit.display_name} > ${submission.id} > Duplicate ID`
                 );
                 // eslint-disable-next-line no-continue
                 continue;
             }
-            if (await Mongo.db('hentaibot').collection(channel.guild.id).countDocuments({ urls: submission.url })) {
+            if (await Mongo.db('hentaibot').collection(channel.guild.id).countDocuments({ url: submission.url })) {
                 console.log(
                     `${channel.guild.id} > ${submission.subreddit.display_name} > ${submission.id} > Duplicate URL`
                 );
@@ -115,10 +112,12 @@ module.exports = {
                             neutral: [],
                             disappointed: []
                         },
-                        redditid: submission.id,
-                        urls: imageLinks,
-                        redditauthor: submission.author.name,
-                        subreddit: submission.subreddit.display_name,
+                        reddit: {
+                            id: submission.id,
+                            author: submission.author.name,
+                            subreddit: submission.display_name
+                        },
+                        url: imageLinks[i],
                         hash: hashes[i]
                     });
             });

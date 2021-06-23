@@ -35,18 +35,15 @@ async function upgradeDb(message, alreadysent, collection, users) {
         const result = await alreadysent.findOne({ url: message.content });
         if (result) data = result;
     }
+    // 2. Check hash
     const hash = await util.submission.get_hash(message.content);
     if (!data && hash) data = await alreadysent.findOne({ hash });
 
     if (data) withdata += 1;
     else withoutdata += 1;
 
-    if (message.content.includes('https://imgur.com/'))
-        // eslint-disable-next-line no-param-reassign
-        message.content = `${message.content.replace(/https:\/\/im/, 'https://i.im')}.jpg`; // Album img to text
-    if (message.content.includes('imgur') && message.content.includes('gifv'))
-        // eslint-disable-next-line no-param-reassign
-        message.content = message.content.replace(/gifv/, 'gif');
+    // eslint-disable-next-line no-param-reassign
+    message.content = util.submission.sanity_check(message.content);
 
     // Get reactions
     const flushed = [];
@@ -92,26 +89,27 @@ async function upgradeDb(message, alreadysent, collection, users) {
                 }
             }
     }
-    const url = message.attachments.map((a) => a.attachment);
-    if (url.length === 0) url[0] = message.content;
+    let url = message.attachments.map((a) => a.attachment);
+    if (url.length === 0) url = message.content;
 
     if (!dryrun)
         collection.updateOne(
             { msgid: message.id },
             {
                 $set: {
-                    redditid: data?.id,
-                    redditauthor: data?.author,
-                    subreddit: data?.subreddit,
                     msgid: message.id,
                     sentby: message.author.id,
-                    urls: url,
-                    // eslint-disable-next-line no-await-in-loop
+                    url,
                     hash,
                     reactions: {
                         flushed,
                         neutral,
                         disappointed
+                    },
+                    reddit: {
+                        id: data?.id,
+                        author: data?.author,
+                        subreddit: data?.subreddit
                     }
                 }
             },
@@ -127,16 +125,19 @@ module.exports = {
         withoutdata = 0;
         noreact = false;
 
-        if (args[0]) {
-            if (args[0] === '--dry-run') dryrun = true;
-            else if (args[0] === '--no-react') noreact = true;
-            else return msg.reply(constants.commands.index.embeds.invalid_argument(args[0]));
+        for (const arg of args) {
+            switch (arg) {
+                case '--dry-run':
+                    dryrun = true;
+                    break;
+                case '--no-react':
+                    noreact = true;
+                    break;
+                default:
+                    return msg.reply(constants.commands.index.embeds.invalid_argument(args[0]));
+            }
         }
-        if (args[1]) {
-            if (args[1] === '--no-react') noreact = true;
-            else if (args[1] === '--dry-run') dryrun = true;
-            else return msg.reply(constants.commands.index.embeds.invalid_argument(args[1]));
-        }
+
         if (!constants.commands.index.allowed.includes(msg.author.id))
             return msg.reply({ embed: constants.commands.index.embeds.notallowed });
 
