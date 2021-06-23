@@ -1,5 +1,5 @@
 const Snoowrap = require('snoowrap');
-const constants = require('../constants.js');
+const constants = require('../constants');
 
 module.exports = {
     async start() {

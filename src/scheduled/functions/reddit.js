@@ -1,5 +1,4 @@
 /* eslint-disable no-param-reassign */
-const { imageHash } = require('image-hash');
 const constants = require('../../constants');
 const util = require('../../util/util');
 
@@ -26,22 +25,13 @@ module.exports = {
         }, constants.reddit.search_timeout * 60 * 1000);
     },
     async work(submission, upsNeeded, orgSubreddit, orgId) {
-        const alreadysent = Mongo.db('hentaibot').collection('alreadysent');
-
         if (orgId) submission.id = [submission.id, orgId];
         if (orgSubreddit) {
             submission.subreddit_name_prefixed = orgSubreddit;
             submission.subreddit.display_name = orgSubreddit.substring(2);
         }
         if (submission.ups < upsNeeded || !submission.url) return;
-        if (await alreadysent.countDocuments({ id: submission.id })) {
-            console.log(`${submission.subreddit.display_name} > ${submission.id} > Duplicate ID`);
-            return;
-        }
-        if (await alreadysent.countDocuments({ url: submission.url })) {
-            console.log(`${submission.subreddit.display_name} > ${submission.id} > Duplicate URL`);
-            return;
-        }
+
         // Check if it's a crosspost
         if (
             submission.crosspost_parent_list &&
@@ -66,19 +56,9 @@ module.exports = {
                 imageLinks.push(t[1].s.u);
         else imageLinks.push(submission.url);
 
-        async function hashCalc(link) {
-            return new Promise((resolve, reject) => {
-                try {
-                    imageHash(link, 16, true, (err, data) => resolve(data));
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        }
-
         for (const link of imageLinks) {
             // eslint-disable-next-line no-await-in-loop
-            const data = await hashCalc(link);
+            const data = await util.submission.get_hash(link);
             // console.log(`hash: ${data}`);
             if (
                 !data &&
@@ -86,28 +66,63 @@ module.exports = {
                 !submission.url.includes('https://www.reddit.com/gallery/')
             )
                 return;
-            // eslint-disable-next-line no-await-in-loop
-            if ((await alreadysent.countDocuments({ hash: data })) && !submission.url.includes('redgif')) {
-                console.log(`${submission.subreddit.display_name} > ${submission.id} > Duplicate hash`);
-                return;
-            }
+
             hashes.push(data);
         }
 
-        for await (const id of constants.reddit.channel_ids) {
+        // eslint-disable-next-line no-labels
+        channel: for await (const id of constants.reddit.channel_ids) {
             const channel = await Discord.channels.cache.get(id);
-            await channel.send({ embed: constants.embeds.image(submission) }); // @TODO Merge embed with photo
-            await util.submission.send(submission, channel);
+
+            if (await Mongo.db('hentaibot').collection(channel.guild.id).countDocuments({ redditid: submission.id })) {
+                console.log(
+                    `${channel.guild.id} > ${submission.subreddit.display_name} > ${submission.id} > Duplicate ID`
+                );
+                // eslint-disable-next-line no-continue
+                continue;
+            }
+            if (await Mongo.db('hentaibot').collection(channel.guild.id).countDocuments({ urls: submission.url })) {
+                console.log(
+                    `${channel.guild.id} > ${submission.subreddit.display_name} > ${submission.id} > Duplicate URL`
+                );
+                // eslint-disable-next-line no-continue
+                continue;
+            }
+            for await (const data of hashes) {
+                if (
+                    (await Mongo.db('hentaibot').collection(channel.guild.id).countDocuments({ hash: data })) &&
+                    !submission.url.includes('redgif')
+                ) {
+                    console.log(
+                        `${channel.guild.id} > ${submission.subreddit.display_name} > ${submission.id} > Duplicate hash`
+                    );
+                    // eslint-disable-next-line no-continue,no-labels
+                    continue channel;
+                }
+            }
+
+            await channel.send({ embed: constants.embeds.image(submission) });
+            const message = await util.submission.send(submission, channel);
+            console.log(`${channel.guild.id} > ${submission.subreddit.display_name} > ${submission.id} > Sent!`);
+            message.forEach((msg, i) => {
+                Mongo.db('hentaibot')
+                    .collection(channel.guild.id)
+                    .insertOne({
+                        msgid: msg.id,
+                        sentby: msg.author.id,
+                        reactions: {
+                            flushed: [],
+                            neutral: [],
+                            disappointed: []
+                        },
+                        redditid: submission.id,
+                        urls: imageLinks,
+                        redditauthor: submission.author.name,
+                        subreddit: submission.subreddit.display_name,
+                        hash: hashes[i]
+                    });
+            });
         }
-        console.log(`${submission.subreddit.display_name} > ${submission.id} > Sent!`);
         // console.log(JSON.stringify({ id: submission.id, url: submission.url, image_links: image_links, author: submission.author.name, subreddit: submission.subreddit.display_name, hash: hashes }));
-        alreadysent.insertOne({
-            id: submission.id,
-            url: submission.url,
-            image_links: imageLinks,
-            author: submission.author.name,
-            subreddit: submission.subreddit.display_name,
-            hash: hashes
-        });
     }
 };

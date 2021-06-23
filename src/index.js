@@ -1,13 +1,14 @@
 const reddit = require('./start/reddit');
-const database = require('./start/database.js');
-const discord = require('./start/discord.js');
-const sankaku = require('./start/sankaku.js');
+const database = require('./start/database');
+const discord = require('./start/discord');
+const sankaku = require('./start/sankaku');
 
-const util = require('./util/util.js');
+const util = require('./util/util');
 const constants = require('./constants');
-const scheduled = require('./scheduled/scheduled.js');
+const scheduled = require('./scheduled/scheduled');
 
 async function init() {
+    console.log('Starting...');
     global.Mongo = await database.start();
     global.Discord = await discord.start();
     global.Reddit = await reddit.start();
@@ -23,7 +24,7 @@ async function init() {
             msg.content.includes('https://www.redgifs.com/watch/') ||
             (msg.content.includes('https://') && constants.conditions.some((e1) => msg.content.includes(e1)))
         )
-            util.submission.add_reacts(msg);
+            return util.submission.add_reacts(msg);
 
         const args = msg.content.slice(constants.prefix.length).trim().split(/ +/);
         const commandName = args.shift().toLowerCase();
@@ -86,20 +87,33 @@ async function init() {
     Discord.on('raw', (event) => {
         // @TODO: Reaction system
         if (event.t === 'MESSAGE_REACTION_ADD' || event.t === 'MESSAGE_REACTION_REMOVE') {
-            // console.log(`event`);
-            // const reaction = event.d.emoji;
-            // const userID = event.d.user_id;
+            console.log(`event`);
+            const reaction = event.d.emoji;
+            const userID = event.d.user_id;
             const messageID = event.d.message_id;
             const guildID = event.d.guild_id;
-            const channelID = event.d.channel_id;
-            const guild = Discord.guilds.cache.get(guildID);
-            const channel = guild.channels.cache.get(channelID);
-            channel.messages.fetch({ limit: 1, around: messageID });
-            // .then(message => console.log(message);
-            // console.log(`${message.id}, id: ${messageID}`);
-            // let role = guild.roles.cache.get(role_id)
-            // console.log(`Reaction: ${JSON.parse(reaction)}, userID: ${userID}, messageID: ${messageID}, guildID: ${guildID}`)
-            // let user = guild.members.cache.get(userID)
+            let emoj;
+
+            switch (reaction.name) {
+                case '😳':
+                    emoj = { 'reactions.flushed': userID };
+                    break;
+                case '😐':
+                    emoj = { 'reactions.neutral': userID };
+                    break;
+                case '😞':
+                    emoj = { 'reactions.disappointed': userID };
+                    break;
+                default:
+                    return;
+            }
+
+            // console.log(`userID: ${userID}, messageID: ${messageID}, guildID: ${guildID}`);
+            // console.log(emoj);
+
+            if (event.t === 'MESSAGE_REACTION_ADD')
+                Mongo.db('hentaibot').collection(guildID).updateOne({ msgid: messageID }, { $push: emoj });
+            else Mongo.db('hentaibot').collection(guildID).updateOne({ msgid: messageID }, { $pull: emoj });
         }
     });
 }

@@ -192,6 +192,50 @@ module.exports = {
                 }
             }
         },
+        index: {
+            name: 'index',
+            usage: '[--dry-run] [--no-react]',
+            description:
+                'Indexes the channel to the database. Should be used if the bot was down while hentai was posted.',
+            allowed: ['753623012070129835', '435086341055709185', '408849832283865118'],
+            args: {
+                required: false,
+                min: 0,
+                max: 2
+            },
+            embeds: {
+                notallowed: {
+                    title: ':x: Only the bot owner amd server moderators are allowed to run this command',
+                    color: 15158332
+                },
+                starting(dryrun) {
+                    return {
+                        embed: {
+                            title: `:information_source: Starting indexing ${
+                                dryrun ? '(Dry run)' : '(Real mode)'
+                            }. It could take a long time!`,
+                            color: 3426654
+                        }
+                    };
+                },
+                invalid_argument(arg) {
+                    return {
+                        embed: {
+                            title: `:x: Aborting operation because of invalid argument ${arg}`,
+                            color: 15158332
+                        }
+                    };
+                },
+                done(newimages, reactions) {
+                    return {
+                        embed: {
+                            title: ':white_check_mark: Indexing finished.',
+                            description: `Scanned ${newimages} messages and added ${reactions} reactions!`
+                        }
+                    };
+                }
+            }
+        },
         list: {
             name: `list`,
             description: `Prints a table embed with subreddits and the needed upvotes for an image to be posted.`,
