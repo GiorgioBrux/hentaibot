@@ -30,7 +30,7 @@
         "snoowrap": "^1.23.0"
     },
     "devDependencies": {
-        "eslint": "7.29.0",
+        "eslint": "7.32.0",
         "eslint-config-airbnb": "18.2.1",
         "eslint-config-prettier": "8.3.0",
         "eslint-plugin-import": "2.23.4",
