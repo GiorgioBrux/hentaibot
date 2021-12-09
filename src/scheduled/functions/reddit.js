@@ -1,6 +1,7 @@
 /* eslint-disable no-param-reassign */
 const constants = require('../../constants');
 const util = require('../../util/util');
+const insert = require('../../db/insert');
 
 module.exports = {
     async start() {
@@ -14,7 +15,7 @@ module.exports = {
             return console.log(`${subreddit} > Search finished`);
         }
 
-        console.log('Ready!');
+        console.log('Reddit: Ready!');
         setInterval(async () => {
             console.log('Searching...');
             const entries = Object.entries(constants.subreddits);
@@ -40,7 +41,7 @@ module.exports = {
             result.subreddit_name_prefixed = submission.subreddit_name_prefixed;
             submission = result;
         }
-        submission.url = util.submission.sanity_check(submission.url);
+        submission.url = await util.submission.sanity_check(submission.url);
 
         const imageLinks = [];
         const hashes = [];
@@ -68,9 +69,7 @@ module.exports = {
             const channel = await Discord.channels.cache.get(id);
 
             if (
-                await Mongo.db('hentaibot')
-                    .collection(channel.guild.id)
-                    .countDocuments({ reddit: { id: submission.id } })
+                await Mongo.db('hentaibot').collection(channel.guild.id).countDocuments({ 'reddit.id': submission.id })
             ) {
                 console.log(
                     `${channel.guild.id} > ${submission.subreddit.display_name} > ${submission.id} > Duplicate ID`
@@ -102,24 +101,7 @@ module.exports = {
             const message = await util.submission.send(submission, channel);
             console.log(`${channel.guild.id} > ${submission.subreddit.display_name} > ${submission.id} > Sent!`);
             message.forEach((msg, i) => {
-                Mongo.db('hentaibot')
-                    .collection(channel.guild.id)
-                    .insertOne({
-                        msgid: msg.id,
-                        sentby: msg.author.id,
-                        reactions: {
-                            flushed: [],
-                            neutral: [],
-                            disappointed: []
-                        },
-                        reddit: {
-                            id: submission.id,
-                            author: submission.author.name,
-                            subreddit: submission.display_name
-                        },
-                        url: imageLinks[i],
-                        hash: hashes[i]
-                    });
+                insert.reddit(msg, imageLinks[i], hashes[i]);
             });
         }
         // console.log(JSON.stringify({ id: submission.id, url: submission.url, image_links: image_links, author: submission.author.name, subreddit: submission.subreddit.display_name, hash: hashes }));

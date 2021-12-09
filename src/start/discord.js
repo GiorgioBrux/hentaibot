@@ -1,47 +1,17 @@
 const fs = require('fs');
-const { Client, Collection } = require('discord.js-light');
+const { Client, Collection, Intents } = require('discord.js-light');
 const path = require('path');
 const constants = require('../constants');
 const util = require('../util/util');
 
 const client = new Client({
     // https://discord.js.org/#/docs/main/v12/typedef/ClientOptions
-    cacheGuilds: true,
-    cacheChannels: true,
-    cacheOverwrites: false,
-    cacheRoles: false,
-    cacheEmojis: true,
-    cachePresences: false,
-    disabledEvents: [
-        'GUILD_UPDATE',
-        'GUILD_MEMBER_ADD',
-        'GUILD_MEMBER_REMOVE',
-        'GUILD_MEMBER_UPDATE',
-        'GUILD_MEMBERS_CHUNK',
-        'GUILD_ROLE_CREATE',
-        'GUILD_ROLE_DELETE',
-        'GUILD_ROLE_UPDATE',
-        'GUILD_BAN_ADD',
-        'GUILD_BAN_REMOVE',
-        'CHANNEL_UPDATE',
-        'CHANNEL_PINS_UPDATE',
-        'MESSAGE_DELETE',
-        'MESSAGE_DELETE_BULK',
-        'MESSAGE_REACTION_REMOVE_ALL',
-        'USER_UPDATE',
-        'USER_NOTE_UPDATE',
-        'USER_SETTINGS_UPDATE',
-        'VOICE_STATE_UPDATE',
-        'TYPING_START',
-        'VOICE_SERVER_UPDATE',
-        'RELATIONSHIP_ADD',
-        'RELATIONSHIP_REMOVE'
-    ],
-    partials: ['MESSAGE', 'CHANNEL', 'REACTION']
+    intents: [Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_MESSAGES]
 });
 
 async function start() {
     try {
+        console.log(JSON.stringify(constants, null, 4));
         await client.login(constants.discordToken);
         console.log(`Connected successfully to discord!`);
         client.commands = new Collection();

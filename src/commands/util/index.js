@@ -5,11 +5,26 @@ const util = require('../../util/util');
 let newreacts = 0;
 let dryrun = false;
 let noreact = false;
+let nodelete = false;
+let deleted = 0;
+let deletefail = 0;
 let withdata = 0;
 let withoutdata = 0;
 const updatedUsers = [];
 
 const emojs = ['😳', '😐', '😞'];
+
+async function progress(proms, progressCb) {
+    let d = 0;
+    progressCb(0);
+    for (const p of proms) {
+        p.then(() => {
+            d += 1;
+            progressCb((d * 100) / proms.length);
+        });
+    }
+    return Promise.all(proms);
+}
 
 async function checkandreact(message) {
     if (noreact) return;
@@ -24,6 +39,14 @@ async function checkandreact(message) {
     }
 }
 
+async function delmess(message) {
+    await message.delete().catch((e) => {
+        deletefail += 1;
+        return console.log(`Couldn't delete ${message.id} because of ${e}`);
+    });
+    deleted += 1;
+}
+
 async function upgradeDb(message, alreadysent, collection, users) {
     let data;
     // 1. Check by url. Simplest and lighest way
@@ -35,15 +58,60 @@ async function upgradeDb(message, alreadysent, collection, users) {
         const result = await alreadysent.findOne({ url: message.content });
         if (result) data = result;
     }
+
+    // eslint-disable-next-line no-param-reassign
+    message.content = await util.submission.sanity_check(message.content);
+
     // 2. Check hash
-    const hash = await util.submission.get_hash(message.content);
+    let url = message.attachments.map((a) => a.attachment);
+    if (url.length === 0) url = message.content;
+    if (url.length === 1) [url] = url;
+
+    let hash;
+
+    if (Array.isArray(url)) {
+        hash = [];
+        /*        for (const one of url) {
+            hash.push(util.submission.get_hash(one));
+        }
+        await Promise.all(hash); */
+        for (const one of url) {
+            // eslint-disable-next-line no-await-in-loop
+            hash.push(await util.submission.get_hash(one));
+        }
+    } else hash = await util.submission.get_hash(url);
+
     if (!data && hash) data = await alreadysent.findOne({ hash });
 
     if (data) withdata += 1;
     else withoutdata += 1;
 
-    // eslint-disable-next-line no-param-reassign
-    message.content = util.submission.sanity_check(message.content);
+    // 3. Check for duplicates
+
+    if (!nodelete) {
+        for (const one of [].concat(url)) {
+            console.log(`Oneurl: ${one}`);
+            // @ TODO: Better handling of the loops to search everything at once
+            // eslint-disable-next-line no-await-in-loop
+            let urldoc = await collection.find({ url: one }).toArray();
+            urldoc = urldoc.filter((obj) => obj.msgid !== message.id);
+            if (urldoc.length > 0) {
+                console.log(`Deleting ${message.id} because it's a duplicate of ${urldoc[0].msgid}`);
+                return delmess(message);
+            }
+        }
+        for (const one of [].concat(hash)) {
+            console.log(`Onehash: ${one}`);
+            // eslint-disable-next-line no-await-in-loop
+            let hashdoc = await collection.find({ hash: one }).toArray();
+            hashdoc = hashdoc.filter((obj) => obj.msgid !== message.id);
+            if (one !== undefined && hashdoc.length > 0) {
+                console.log(`Deleting ${message.id} because it's a duplicate of ${hashdoc[0].msgid}`);
+                return delmess(message);
+            }
+        }
+    }
+    await checkandreact(message);
 
     // Get reactions
     const flushed = [];
@@ -89,8 +157,17 @@ async function upgradeDb(message, alreadysent, collection, users) {
                 }
             }
     }
-    let url = message.attachments.map((a) => a.attachment);
-    if (url.length === 0) url = message.content;
+    const redditdata = data?.id
+        ? {
+              reddit: {
+                  id: data?.id,
+                  author: data?.author,
+                  subreddit: data?.subreddit
+              }
+          }
+        : {};
+
+    const sankakudata = data?.sankaku ? data?.sankaku : [];
 
     if (!dryrun)
         collection.updateOne(
@@ -106,11 +183,8 @@ async function upgradeDb(message, alreadysent, collection, users) {
                         neutral,
                         disappointed
                     },
-                    reddit: {
-                        id: data?.id,
-                        author: data?.author,
-                        subreddit: data?.subreddit
-                    }
+                    ...redditdata,
+                    ...sankakudata
                 }
             },
             { upsert: true }
@@ -124,6 +198,9 @@ module.exports = {
         withdata = 0;
         withoutdata = 0;
         noreact = false;
+        nodelete = false;
+        deleted = 0;
+        deletefail = 0;
 
         for (const arg of args) {
             switch (arg) {
@@ -132,6 +209,9 @@ module.exports = {
                     break;
                 case '--no-react':
                     noreact = true;
+                    break;
+                case '--no-delete':
+                    nodelete = true;
                     break;
                 default:
                     return msg.reply(constants.commands.index.embeds.invalid_argument(args[0]));
@@ -169,12 +249,16 @@ module.exports = {
                 (message.content.includes('https://') &&
                     constants.conditions.some((e1) => message.content.includes(e1)))
             ) {
-                alldone.push(checkandreact(message, emojs));
+                // eslint-disable-next-line no-await-in-loop
+
                 alldone.push(upgradeDb(message, alreadysent, collection, users));
             }
         }
-        await Promise.all(alldone);
+
+        await progress(alldone, (p) => {
+            console.log(`% Done = ${p.toFixed(2)}`);
+        });
         console.log('Done...');
-        return msg.reply(constants.commands.index.embeds.done(withoutdata + withdata, newreacts));
+        return msg.reply(constants.commands.index.embeds.done(withoutdata + withdata, newreacts, deleted, deletefail));
     }
 };

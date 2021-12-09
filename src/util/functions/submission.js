@@ -5,7 +5,7 @@ const constants = require('../../constants');
 module.exports = {
     async send(submission, msg) {
         // @TODO: Check status (404?) of pics/videos before sending
-        if (!submission.url || !constants.conditions.some((e1) => submission.url.includes(e1))) return 1;
+        if (!submission.url || !constants.conditions.some((e1) => submission.url.includes(e1))) return;
 
         if (submission.url.includes('https://www.reddit.com/gallery/')) {
             const array = await JSON.parse(JSON.stringify(submission.media_metadata));
@@ -72,5 +72,6 @@ module.exports = {
     async sanity_check(url) {
         if (url.includes('https://imgur.com/')) url = `${url.replace(/https:\/\/im/, 'https://i.im')}.jpg`; // Album img to text
         if (url.includes('imgur') && url.includes('gifv')) url = url.replace(/gifv/, 'gif');
+        return url;
     }
 };

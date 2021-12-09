@@ -11,7 +11,8 @@ It can automatically get hentai from reddit and repost them to discord channels 
 
 #### Fun
 
-- `.random [subreddit_name]`: Gets a (not so) random image from a subreddit or from its subreddit list.
+- `.random [number]`: Gets a random submission from the database of existing pictures.
+- `.rrandom [number] [subreddit_name]`: Gets a (not so) random image from a subreddit or from its subreddit list.
 - `.srandom [number] [tags]`: Get a random image from sankaku. Supports tags in the form of `yuri -video`.
 
 #### Info

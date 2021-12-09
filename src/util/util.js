@@ -1,5 +1,5 @@
-const numbers = require('./functions/numbers');
-const path = require('./functions/path');
-const submission = require('./functions/submission');
+import numbers from './functions/numbers';
+import path from './functions/path';
+import submission from './functions/submission';
 
-module.exports = { numbers, path, submission };
+export default { numbers, path, submission };

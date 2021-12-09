@@ -16,8 +16,7 @@ module.exports = {
             clientSecret: '',
             refreshToken: ''
         },
-        search_timeout: 5, // Search frequency in minutes
-        channel_ids: ['example']
+        search_timeout: 5 // Search frequency in minutes
     },
     embeds: {
         args: {
@@ -82,19 +81,22 @@ module.exports = {
         random: {
             name: `random`,
             aliases: [`rnd`],
-            usage: `[subreddit_name]`,
+            usage: `[amount] [subreddit_name]`,
             args: {
                 required: false,
                 min: 0,
-                max: 1,
-                type: ['string']
+                max: 2
             },
             description: 'Gets a (not so) random image from a subreddit or from its subreddit list.',
             errors: {
                 no_random(subreddit) {
                     return `I'm sorry, but the subreddit r/${subreddit} doesn't support the random feature.`;
                 },
-                no_image: "I'm sorry, I got a post but it doesn't contain any image :(",
+                no_image(number) {
+                    return `I'm sorry, I got ${
+                        number === 1 ? "a post that doesn't" : `${number} posts that don't`
+                    } contain any image :(`;
+                },
                 generic(err) {
                     return `I'm sorry, something went wrong: ${err.response.statusCode} ${err.response.statusMessage}. Are you sure the subreddit exists and isn't banned?`;
                 }
@@ -272,6 +274,15 @@ module.exports = {
                             color: 15158332
                         }
                     };
+                }
+            }
+        },
+        report: {
+            embeds: {
+                report: {
+                    title: ':warning: This image has been reported.',
+                    color: 16776960,
+                    description: `Please don't report this image again. Someone will take a look asap.`
                 }
             }
         }
