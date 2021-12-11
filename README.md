@@ -49,18 +49,7 @@ export default {
             clientSecret: '',
             refreshToken: ''
         },
-        search_timeout: 6000 // Search frequency in minutes
-    },
-    commands: {
-        report: {
-            embeds: {
-                report: {
-                    title: ':warning: This image has been reported.',
-                    color: 16776960,
-                    description: `Please don't report this image again. @GiorgioBrux#2904 will take a look asap.`
-                }
-            }
-        }
+        search_timeout: 60 // Search frequency in minutes
     }
 };
 
