@@ -26,7 +26,7 @@ It can automatically get hentai from reddit and repost them to discord channels 
 ### Installation
 
 
-To use, open the `src`, and create a file called `constants-default.js`.<br>
+To use, open the `src`, and create a file called `constants-custom.js`.<br>
 This file will overwrite the default settings found in `constants-default.js`<br>
 It is recommended to use at least these settings, albeit not all are strictly necessary: <br>
 ```javascript
