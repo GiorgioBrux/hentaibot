@@ -1,6 +1,7 @@
-const fetchAll = require('discord-fetch-all');
-const constants = require('../../constants');
-const util = require('../../util/util');
+import fetchAll from 'discord-fetch-all';
+import { Permissions } from 'discord.js';
+import constants from '../../constants.js';
+import util from '../../util/util.js';
 
 let newreacts = 0;
 let dryrun = false;
@@ -13,18 +14,6 @@ let withoutdata = 0;
 const updatedUsers = [];
 
 const emojs = ['😳', '😐', '😞'];
-
-async function progress(proms, progressCb) {
-    let d = 0;
-    progressCb(0);
-    for (const p of proms) {
-        p.then(() => {
-            d += 1;
-            progressCb((d * 100) / proms.length);
-        });
-    }
-    return Promise.all(proms);
-}
 
 async function checkandreact(message) {
     if (noreact) return;
@@ -124,7 +113,7 @@ async function upgradeDb(message, alreadysent, collection, users) {
         if (reactions)
             for (const [dId, userdata] of reactions) {
                 // eslint-disable-next-line no-continue
-                if (dId === constants.bot_userid) continue;
+                if (dId === '801130776775098378' || userdata.bot) continue;
                 if (!updatedUsers.includes(dId)) {
                     if (!dryrun)
                         users.updateOne(
@@ -167,7 +156,7 @@ async function upgradeDb(message, alreadysent, collection, users) {
           }
         : {};
 
-    const sankakudata = data?.sankaku ? data?.sankaku : [];
+    const sankakudata = data?.sankaku ? { sankaku: data?.sankaku } : {};
 
     if (!dryrun)
         collection.updateOne(
@@ -175,6 +164,7 @@ async function upgradeDb(message, alreadysent, collection, users) {
             {
                 $set: {
                     msgid: message.id,
+                    channelid: message.channel.id,
                     sentby: message.author.id,
                     url,
                     hash,
@@ -191,7 +181,7 @@ async function upgradeDb(message, alreadysent, collection, users) {
         ); // If there isn't data, delete
 }
 
-module.exports = {
+export default {
     async execute(msg, args) {
         newreacts = 0;
         dryrun = false;
@@ -214,14 +204,17 @@ module.exports = {
                     nodelete = true;
                     break;
                 default:
-                    return msg.reply(constants.commands.index.embeds.invalid_argument(args[0]));
+                    return msg.reply({ embeds: [constants.commands.index.embeds.invalid_argument(args[0])] });
             }
         }
 
-        if (!constants.commands.index.allowed.includes(msg.author.id))
-            return msg.reply({ embed: constants.commands.index.embeds.notallowed });
+        if (
+            !msg.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) &&
+            !constants.notstaff_allowed.includes(msg.author.id)
+        )
+            return msg.reply({ embeds: [constants.embeds.notallowed] });
 
-        await msg.reply(constants.commands.index.embeds.starting(dryrun));
+        await msg.reply({ embeds: [constants.commands.index.embeds.starting(dryrun)] });
 
         console.log('Starting indexing...');
         console.log(`Channel id ${msg.channel.id}`);
@@ -250,15 +243,13 @@ module.exports = {
                     constants.conditions.some((e1) => message.content.includes(e1)))
             ) {
                 // eslint-disable-next-line no-await-in-loop
-
-                alldone.push(upgradeDb(message, alreadysent, collection, users));
+                alldone.push(await upgradeDb(message, alreadysent, collection, users));
             }
         }
-
-        await progress(alldone, (p) => {
-            console.log(`% Done = ${p.toFixed(2)}`);
-        });
+        await Promise.all(alldone);
         console.log('Done...');
-        return msg.reply(constants.commands.index.embeds.done(withoutdata + withdata, newreacts, deleted, deletefail));
+        return msg.reply({
+            embeds: [constants.commands.index.embeds.done(withoutdata + withdata, newreacts, deleted, deletefail)]
+        });
     }
 };

@@ -5,8 +5,6 @@
 A WIP fully featured hentai bot for discord.<br>
 It can automatically get hentai from reddit and repost them to discord channels if an upvote threshold is reached.
 
-<span style="font-size:larger;">WARNING: THIS BOT IS CURRENLTY ONGOING MASSIVE REFACTORING AND BREAKING CHANGES, BEFORE UPDATING CHECK CHANGES</span>
-
 ## Commands
 
 #### Fun
@@ -21,11 +19,52 @@ It can automatically get hentai from reddit and repost them to discord channels 
 - `.help`: Prints an help embed with all commands.
 - `.list`: Prints a table embed with subreddits and the needed upvotes for an image to be posted.
 
+#### Util
+- `.index`: Index the images in a channel to the database. To migrate to the new database, run this and then delete the `alreadysent` collection.
+- `.report`: Report a rule-breaking image.
 
 ### Installation
 
-> :warning: This is meant to be used with a user token, not a bot.  
-> If you want to use a bot token instead, point `discord.js-light` in `package.json` to `latest`.
 
-To use, open the `src`, make the necessary changes to `constants.example.js` and rename it to `constants.js`.<br>
-Then run `node .` and you are set.
+To use, open the `src`, and create a file called `constants-default.js`.<br>
+This file will overwrite the default settings found in `constants-default.js`<br>
+It is recommended to use at least these settings, albeit not all are strictly necessary: <br>
+```javascript
+export default {
+    prefix: '.',
+    discordToken: 'yourtoken',
+    mongodbUrl:
+        'your mongodb url',
+    commands_channelids: [
+        'yourchannel'
+    ],
+    sankaku: {
+        login: 'user',
+        password: 'hunter2'
+    },
+    reddit: {
+        config: {
+            userAgent: 'nodejs/app by /u/yourusername',
+            clientId: '',
+            clientSecret: '',
+            refreshToken: ''
+        },
+        search_timeout: 6000 // Search frequency in minutes
+    },
+    commands: {
+        report: {
+            embeds: {
+                report: {
+                    title: ':warning: This image has been reported.',
+                    color: 16776960,
+                    description: `Please don't report this image again. @GiorgioBrux#2904 will take a look asap.`
+                }
+            }
+        }
+    }
+};
+
+```
+Then run `node .` and you are set. <br>
+Note: there is a `.setup` command, but its still not honored. <br>
+The bot will try to send reddit images in all channels in `commands_channelIds` for now.

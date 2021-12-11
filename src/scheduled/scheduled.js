@@ -1,3 +1,3 @@
-const reddit = require('./functions/reddit');
+import reddit from './functions/reddit.js';
 
-module.exports = { reddit };
+export default { reddit };

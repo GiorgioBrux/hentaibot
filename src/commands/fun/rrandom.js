@@ -1,9 +1,13 @@
-const constants = require('../../constants');
-const util = require('../../util/util');
-const insert = require('../../db/insert');
+import constants from '../../constants.js';
+import util from '../../util/util.js';
+import insert from '../../db/insert.js';
+/* eslint-disable */ // Remove if ready
 
-module.exports = {
+export default {
     async execute(msg, args) {
+        return msg.reply({ embeds: [constants.embeds.generic_error('This command has been temporarily removed.')] });
+        // @TODO: Make this true random or remove it.
+
         let subreddit;
         let number;
         let noimage = 0;
@@ -35,38 +39,44 @@ module.exports = {
             return msg.reply(constants.commands.rrandom.errors.no_random(subreddit.name));
 
         async function go() {
-            await Reddit.getSubreddit(subreddit.name)
-                .getRandomSubmission()
-                .then(async (res) => {
-                    if (Array.isArray(res)) {
-                        const array = Object.keys(constants.subreddits);
-                        subreddit = { name: array[Math.floor(Math.random() * array.length)], custom: false };
-                        return go();
+            if (!subreddit.custom) {
+                const array = Object.keys(constants.subreddits);
+                subreddit = { name: array[Math.floor(Math.random() * array.length)], custom: false };
+            }
+            const res = await Reddit.getSubreddit(subreddit.name).getRandomSubmission();
+            try {
+                if (Array.isArray(res)) {
+                    const array = Object.keys(constants.subreddits);
+                    subreddit = { name: array[Math.floor(Math.random() * array.length)], custom: false };
+                    console.log('Riprovo...');
+                    return go();
+                }
+                const [result] = await util.submission.send(res, msg.channel);
+                if (!result) {
+                    if (!subreddit.custom) return go();
+                    if (number !== 1) {
+                        noimage += 1;
+                        return;
                     }
-                    const [result] = await util.submission.send(res, msg.channel);
-                    if (!result) {
-                        if (!subreddit.custom) return go();
-                        if (number !== 1) {
-                            noimage += 1;
-                            return;
-                        }
-                        return msg.channel.send(constants.commands.rrandom.errors.no_image(1));
-                    }
-                    return result;
-                })
-                .catch((err) => {
-                    if (number === 1) msg.channel.send(constants.commands.rrandom.errors.generic(err));
-                    else return go();
-                });
+                    await msg.channel.send(constants.commands.rrandom.errors.no_image(1));
+                    return;
+                }
+                return [result, res];
+            } catch (err) {
+                if (number === 1) msg.channel.send({ embeds: [constants.commands.rrandom.errors.generic(err)] });
+                else return go();
+            }
         }
+
         const messages = [];
         const db = [];
         for (let i = 0; i < number; i += 1) {
-            messages.push(go());
+            messages.push(await go());
         }
         await Promise.all(messages);
         for (const message of messages) {
-            db.push(insert.reddit(message));
+            if (!message) continue;
+            db.push(insert.reddit(message[0], message[1]));
         }
         await Promise.all(db);
         if (number !== 1 && noimage !== 0) {

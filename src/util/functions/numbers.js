@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     number_to_ordinal(number) {
         const special = [
             'zeroth',

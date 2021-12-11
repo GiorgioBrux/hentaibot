@@ -1,6 +1,6 @@
-const constants = require('../../constants');
+import constants from '../../constants.js';
 
-module.exports = {
+export default {
     async execute(msg) {
         // @TODO: Sort by upvotes needed
         const alpha = Object.keys(constants.subreddits)
@@ -10,6 +10,6 @@ module.exports = {
 
         const names = Object.keys(alpha).join('\n');
         const upvotes = Object.values(alpha).join('\n');
-        msg.reply(constants.commands.list.embeds.list(names, upvotes));
+        await msg.reply({ embeds: [constants.commands.list.embeds.list(names, upvotes)] });
     }
 };

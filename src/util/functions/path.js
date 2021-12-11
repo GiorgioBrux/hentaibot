@@ -1,7 +1,7 @@
-const path = require('path');
+import path from 'path';
 
-module.exports = {
-    name(__filename) {
-        return path.basename(__filename, path.extname(__filename));
-    }
-};
+function name(__filename) {
+    return path.basename(__filename, path.extname(__filename));
+}
+
+export default { name };

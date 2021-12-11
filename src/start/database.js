@@ -1,7 +1,7 @@
-const { MongoClient } = require('mongodb');
-const constants = require('../constants');
+import { MongoClient } from 'mongodb';
+import constants from '../constants.js';
 
-const Mongo = new MongoClient(constants.mongodbUrl, { useNewUrlParser: true, useUnifiedTopology: true });
+const Mongo = new MongoClient(constants.mongodbUrl);
 
 async function start() {
     try {
@@ -13,4 +13,4 @@ async function start() {
     }
 }
 
-module.exports = { start };
+export default { start };

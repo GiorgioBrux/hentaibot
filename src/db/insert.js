@@ -1,11 +1,12 @@
-const util = require('../util/util');
+import util from '../util/util.js';
 
-module.exports = {
+export default {
     async unknown(msg, url) {
         await Mongo.db('hentaibot')
             .collection(msg.guild.id)
             .insertOne({
                 msgid: msg.id,
+                channelid: msg.channel.id,
                 sentby: msg.author.id,
                 reactions: {
                     flushed: [],
@@ -16,11 +17,12 @@ module.exports = {
                 hash: await util.submission.get_hash(url)
             });
     },
-    async reddit(msg, submission, url, hash) {
-        Mongo.db('hentaibot')
+    async reddit(msg, submission, hash, url) {
+        await Mongo.db('hentaibot')
             .collection(msg.guild.id)
             .insertOne({
                 msgid: msg.id,
+                channelid: msg.channel.id,
                 sentby: msg.author.id,
                 reactions: {
                     flushed: [],
@@ -32,8 +34,8 @@ module.exports = {
                     author: submission.author.name,
                     subreddit: submission.subreddit.display_name
                 },
-                url: url || msg.attachments.array()[0]?.url || msg.content,
-                hash: hash || (await util.submission.get_hash(msg.attachments.array()[0]?.url || msg.content))
+                url: url || msg.attachments.values()[0]?.url || msg.content,
+                hash: hash || (await util.submission.get_hash(msg.attachments.values()[0]?.url || msg.content))
             });
     },
     async sankaku(msg, data) {
@@ -41,6 +43,7 @@ module.exports = {
             .collection(msg.guild.id)
             .insertOne({
                 msgid: msg.id,
+                channelid: msg.channel.id,
                 sentby: msg.author.id,
                 reactions: {
                     flushed: [],
@@ -60,8 +63,8 @@ module.exports = {
                     }))
                 },
                 url: data.file_url,
-                // eslint-disable-next-line no-await-in-loop
-                hash: await util.submission.get_hash(msg.attachments.array()[0]?.url || msg.content)
+
+                hash: await util.submission.get_hash(msg.attachments.values()[0]?.url || msg.content)
             });
     }
 };

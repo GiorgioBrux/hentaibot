@@ -1,5 +1,5 @@
-const { Client } = require('sankaku-client');
-const constants = require('../constants.js');
+import { Client } from 'sankaku-client';
+import constants from '../constants.js';
 
 async function start() {
     try {
@@ -12,4 +12,4 @@ async function start() {
     }
 }
 
-module.exports = { start };
+export default { start };

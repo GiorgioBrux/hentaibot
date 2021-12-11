@@ -1,12 +1,22 @@
-const fs = require('fs');
-const { Client, Collection, Intents } = require('discord.js-light');
-const path = require('path');
-const constants = require('../constants');
-const util = require('../util/util');
+import fs from 'fs';
+import path from 'path';
+import discord from 'discord.js';
+import { fileURLToPath } from 'url';
+import constants from '../constants.js';
+import util from '../util/util.js';
 
-const client = new Client({
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
+const commandFolders = fs.readdirSync(path.resolve(dirname, `../commands/`));
+
+const client = new discord.Client({
     // https://discord.js.org/#/docs/main/v12/typedef/ClientOptions
-    intents: [Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.GUILD_MESSAGES]
+    intents: [
+        discord.Intents.FLAGS.GUILDS,
+        discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        discord.Intents.FLAGS.GUILD_MESSAGES
+    ],
+    partials: ['MESSAGE', 'CHANNEL', 'REACTION']
 });
 
 async function start() {
@@ -14,20 +24,25 @@ async function start() {
         console.log(JSON.stringify(constants, null, 4));
         await client.login(constants.discordToken);
         console.log(`Connected successfully to discord!`);
-        client.commands = new Collection();
-        const commandFolders = fs.readdirSync(path.resolve(__dirname, `../commands/`));
+
+        await client.user.setActivity(constants.activity);
+
+        client.commands = new discord.Collection();
+
+        console.log(util.path.name('help'));
+        console.log('done');
 
         for (const folder of commandFolders) {
-            // eslint-disable-next-line no-await-in-loop
-            const commandFiles = await fs
-                .readdirSync(path.resolve(__dirname, `../commands/${folder}`))
+            const commandFiles = fs
+                .readdirSync(path.resolve(dirname, `../commands/${folder}`))
                 .filter((file) => file.endsWith('.js'));
             for (let file of commandFiles) {
-                // eslint-disable-next-line no-await-in-loop,import/no-dynamic-require,global-require
-                const command = await require(`../commands/${folder}/${file}`);
+                // eslint-disable-next-line no-await-in-loop
+                const command = await import(`../commands/${folder}/${file}`);
                 file = file.toString().substring(0, file.toString().length - 3); // Remove .js extension
+                console.log(`File: ${file}`);
                 client.commands.set(constants.commands[util.path.name(file)].name, {
-                    ...command,
+                    ...command.default,
                     ...constants.commands[util.path.name(file)]
                 });
             }
@@ -38,4 +53,4 @@ async function start() {
     }
 }
 
-module.exports = { start };
+export default { start };

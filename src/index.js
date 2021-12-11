@@ -1,21 +1,20 @@
-import reddit from './start/reddit';
-const database = require('./start/database');
-const discord = require('./start/discord');
-const sankaku = require('./start/sankaku');
-
-const util = require('./util/util');
-const constants = require('./constants');
-const scheduled = require('./scheduled/scheduled');
-const insert = require('./db/insert');
+import reddit from './start/reddit.js';
+import database from './start/database.js';
+import discord from './start/discord.js';
+import sankaku from './start/sankaku.js';
+import util from './util/util.js';
+import constants from './constants.js';
+import scheduled from './scheduled/scheduled.js';
+import insert from './db/insert.js';
 
 async function identifyEmoji(reaction, user) {
-    switch (reaction.name) {
+    switch (reaction.emoji.name) {
         case '😳':
-            return { 'reactions.flushed': user.userID };
+            return { 'reactions.flushed': user.id };
         case '😐':
-            return { 'reactions.neutral': user.userID };
+            return { 'reactions.neutral': user.id };
         case '😞':
-            return { 'reactions.disappointed': user.userID };
+            return { 'reactions.disappointed': user.id };
         default:
     }
 }
@@ -28,7 +27,10 @@ global.Sankaku = await sankaku.start();
 
 scheduled.reddit.start();
 
-Discord.on('message', async (msg) => {
+// eslint-disable-next-line no-promise-executor-return
+const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
+Discord.on('messageCreate', async (msg) => {
     if (msg.author.bot || msg.author.id === constants.bot_userid) return;
     if (!constants.commands_channelids.includes(msg.channel.id)) return;
     if (
@@ -40,36 +42,40 @@ Discord.on('message', async (msg) => {
         if (url.length === 0) url = msg.content;
         if (url.length === 1) [url] = url;
 
-        let hash;
-
         if (Array.isArray(url)) {
-            await msg.reply({ embed: constants.embeds.multipleattachments });
-            hash = [];
-            for (const one of url) {
-                // eslint-disable-next-line no-await-in-loop
-                hash.push(await util.submission.get_hash(one));
-            }
-        } else hash = await util.submission.get_hash(url);
+            const reply = await msg.reply({ embeds: [constants.embeds.multipleattachments] });
+            await msg.delete();
+            await delay(15000);
+            return reply.delete();
+        }
+        const hash = await util.submission.get_hash(url);
 
         const urldoc = await Mongo.db('hentaibot').collection(msg.guild.id).find({ url }).toArray();
         const hashdoc = await Mongo.db('hentaibot').collection(msg.guild.id).find({ hash }).toArray();
 
         if (urldoc.length > 0 || (hash && hashdoc.length > 0 && !url?.includes('redgif'))) {
             console.log(`${msg.guild.id} > ${msg.id} > Duplicate`);
-            return msg.reply({
-                embed: constants.embeds.duplicate(urldoc[0]?.msgid || hashdoc[0]?.msgid, msg.guild.id, msg.channel.id)
+            const reply = await msg.reply({
+                embeds: [
+                    constants.embeds.duplicate(urldoc[0]?.msgid || hashdoc[0]?.msgid, msg.guild.id, msg.channel.id)
+                ]
             });
+            await msg.delete();
+            await delay(15000);
+            return reply.delete();
         }
+
         await insert.unknown(msg, url);
         return util.submission.add_reacts(msg);
     }
+
     let args = msg.content.slice(constants.prefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
     if (!msg.content.startsWith(constants.prefix)) return;
 
     const command =
-        Discord.commands.get(commandName) ||
-        Discord.commands.find((cmd) => cmd.aliases && cmd.aliases.includes(commandName));
+        (await Discord.commands.get(commandName)) ||
+        (await Discord.commands.find((cmd) => cmd.aliases && cmd.aliases.includes(commandName)));
     if (!command) return;
 
     if (command.args) {
@@ -80,21 +86,29 @@ Discord.on('message', async (msg) => {
                 command.args.min !== 0 &&
                 typeof args[command.args.min - 1] === 'undefined')
         )
-            return msg.reply(constants.embeds.args.not_enough_error(command.args.min, command.usage, command.name));
+            return msg.reply({
+                embeds: [constants.embeds.args.not_enough_error(command.args.min, command.usage, command.name)]
+            });
         if (typeof command.args.max !== 'undefined' && typeof args[command.args.max] !== 'undefined')
-            return msg.reply(constants.embeds.args.too_many_error(command.args.max, command.usage, command.name));
+            return msg.reply({
+                embeds: [constants.embeds.args.too_many_error(command.args.max, command.usage, command.name)]
+            });
         // Check type
         if (command.args.type) {
+            // eslint-disable-next-line func-names
             fn = function sendError(i) {
-                msg.reply(
-                    constants.embeds.args.wrong_type_error(
-                        util.numbers.number_to_ordinal(i + 1),
-                        i,
-                        command.usage,
-                        command
-                    )
-                );
+                msg.reply({
+                    embeds: [
+                        constants.embeds.args.wrong_type_error(
+                            util.numbers.number_to_ordinal(i + 1),
+                            i,
+                            command.usage,
+                            command
+                        )
+                    ]
+                });
             };
+
             // @TODO: Scroll through the argument instead of the type, and if type[i] doesn't exist, use the last used?
             for (const [i, v] of command.args.type.entries()) {
                 if (typeof args[i] === 'undefined') break;
@@ -111,13 +125,14 @@ Discord.on('message', async (msg) => {
                             if (command.args.type[i + 1] !== 'string') return fn(i);
                             args = [1, args[0]];
                         }
+
                         if (args[i] > constants.maximages)
-                            return msg.reply({ embed: constants.embeds.too_many_images(constants.maximages) });
+                            return msg.reply({ embeds: [constants.embeds.too_many_images(constants.maximages)] });
                         break;
                     case 'all':
                         break;
                     default:
-                        return msg.reply(constants.embeds.args.no_type_error(v));
+                        return msg.reply({ embeds: [constants.embeds.args.no_type_error(v)] });
                 }
             }
         }
@@ -126,39 +141,55 @@ Discord.on('message', async (msg) => {
     try {
         command.execute(msg, args);
     } catch (err) {
-        msg.reply({ embed: constants.embeds.generic_error(err) });
+        await msg.reply({ embeds: [constants.embeds.generic_error(err)] });
     }
 });
 
 Discord.on('messageReactionAdd', async (reaction, user) => {
+    const channelid = await reaction.message.channel.id;
+    if (!constants.commands_channelids.includes(channelid)) return;
     // @TODO: Check if message is in hentai channel
+    // if(user.bot) return;
     if (reaction.partial) {
         try {
             await reaction.fetch();
-        } catch (error) {
+        } catch {
             return;
         }
     }
-    const obj = identifyEmoji(reaction, user);
+    if (user.partial) await user.fetch();
+    if (user.bot) return;
+
+    const obj = await identifyEmoji(reaction, user);
+
     if (!obj) return;
-    Mongo.db('hentaibot').collection(reaction.guildID).updateOne({ msgid: reaction.messageID }, { $push: obj });
+    await Mongo.db('hentaibot')
+        .collection(reaction.message.guild.id)
+        .updateOne({ msgid: reaction.message.id }, { $push: obj });
 });
 
 Discord.on('messageReactionRemove', async (reaction, user) => {
+    const channelid = await reaction.message.channel.id;
+    if (!constants.commands_channelids.includes(channelid)) return;
     // @TODO: Check if message is in hentai channel
     if (reaction.partial) {
         try {
             await reaction.fetch();
-        } catch (error) {
+        } catch {
             return;
         }
     }
-    const obj = identifyEmoji(reaction, user);
+    if (user.partial) await user.fetch();
+    if (user.bot) return;
+    const obj = await identifyEmoji(reaction, user);
     if (!obj) return;
-    Mongo.db('hentaibot').collection(reaction.guildID).updateOne({ msgid: reaction.messageID }, { $pull: obj });
+    await Mongo.db('hentaibot')
+        .collection(reaction.message.guild.id)
+        .updateOne({ msgid: reaction.message.id }, { $pull: obj });
 });
 
 Discord.on('messageDelete', async (msg) => {
+    if (!constants.commands_channelids.includes(msg.channel.id)) return;
     // @TODO: Check if message is in hentai channel
-    Mongo.db('hentaibot').collection(msg.guildID).deleteOne({ msgid: msg.guildID });
+    await Mongo.db('hentaibot').collection(msg.guild.id).deleteOne({ msgid: msg.guild.id });
 });

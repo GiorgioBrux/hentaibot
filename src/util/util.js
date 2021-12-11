@@ -1,5 +1,5 @@
-import numbers from './functions/numbers';
-import path from './functions/path';
-import submission from './functions/submission';
+import numbers from './functions/numbers.js';
+import path from './functions/path.js';
+import submission from './functions/submission.js';
 
 export default { numbers, path, submission };

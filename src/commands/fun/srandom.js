@@ -1,8 +1,8 @@
-const constants = require('../../constants');
-const util = require('../../util/util');
-const insert = require('../../db/insert');
+import constants from '../../constants.js';
+import util from '../../util/util.js';
+import insert from '../../db/insert.js';
 
-module.exports = {
+export default {
     async execute(msg, args) {
         const amount = /^\d+$/.test(args[0]) ? await args.shift().toString() : '1';
 
@@ -25,7 +25,7 @@ module.exports = {
             }
             if (amount !== '1') await msg.channel.send(constants.commands.srandom.misc.multi_done(counter));
         } catch (error) {
-            msg.reply(constants.commands.srandom.errors.generic(error));
+            await msg.reply(constants.commands.srandom.errors.generic(error));
         }
     }
 };

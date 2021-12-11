@@ -1,0 +1,30 @@
+{
+  "extends": ["xo", "airbnb-base", "prettier"],
+  "parser": "@babel/eslint-parser",
+  "plugins": ["@babel" ,"unicorn"],
+  "env": {
+    "es6": true
+  },
+  "rules": {
+    "no-console": "off",
+    "consistent-return": "off",
+    "no-restricted-syntax": "off",
+    "import/extensions": [
+      "error",
+      {
+        "js": "ignorePackages"
+      }
+    ]
+  },
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "allowImportExportEverywhere": true
+  },
+  "globals": {
+    "Reddit": "readonly",
+    "Mongo": "readonly",
+    "Discord": "readonly",
+    "Sankaku": "readonly"
+  }
+}

@@ -1,8 +1,7 @@
-/* eslint-disable no-param-reassign */
-const { imageHash } = require('image-hash');
-const constants = require('../../constants');
+import { imageHash } from 'image-hash';
+import constants from '../../constants.js';
 
-module.exports = {
+const obj = {
     async send(submission, msg) {
         // @TODO: Check status (404?) of pics/videos before sending
         if (!submission.url || !constants.conditions.some((e1) => submission.url.includes(e1))) return;
@@ -15,24 +14,27 @@ module.exports = {
                 const message = await msg.send(t[1].s.u);
                 messages.push(message);
                 // eslint-disable-next-line no-await-in-loop
-                await module.exports.add_reacts(message);
+                await obj.add_reacts(message);
             }
+
             await Promise.all(messages);
             return messages;
-            // console.log("Finished sending gallery");
+            // Console.log("Finished sending gallery");
         }
+
         if (submission.url.includes('redgif')) {
             const message = await msg.send(submission.url);
-            await module.exports.add_reacts(message);
+            await obj.add_reacts(message);
             return [message];
         }
-        // console.log(`Url: ${submission.url}`)
+
+        // Console.log(`Url: ${submission.url}`)
         let message;
         try {
-            const rex = new RegExp('\\.([^/#?]+)([#?][^/]*)?$');
+            const rex = /\.([^/#?]+)([#?][^/]*)?$/;
             rex.test(submission.url);
             const ext = `.${RegExp.$1}`;
-            // const ext = submission.url.match(/\.([^/#?]+)([#?][^/]*)?$/g)[0];
+            // Const ext = submission.url.match(/\.([^/#?]+)([#?][^/]*)?$/g)[0];
             // console.log(`Ext: ${ext}`);
             if (!ext)
                 console.log(
@@ -51,7 +53,8 @@ module.exports = {
             console.log(`Submission sending error: ${e}`);
             message = await msg.send(submission.url);
         }
-        await module.exports.add_reacts(message);
+
+        await obj.add_reacts(message);
         return [message];
     },
     async add_reacts(msg) {
@@ -70,8 +73,12 @@ module.exports = {
         });
     },
     async sanity_check(url) {
+        // eslint-disable-next-line no-param-reassign
         if (url.includes('https://imgur.com/')) url = `${url.replace(/https:\/\/im/, 'https://i.im')}.jpg`; // Album img to text
+        // eslint-disable-next-line no-param-reassign
         if (url.includes('imgur') && url.includes('gifv')) url = url.replace(/gifv/, 'gif');
         return url;
     }
 };
+
+export default obj;

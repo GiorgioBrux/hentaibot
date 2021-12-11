@@ -1,5 +1,5 @@
 import Snoowrap from 'snoowrap';
-import constants from '../constants';
+import constants from '../constants.js';
 
 async function start() {
     const reddit = new Snoowrap(constants.reddit.config);
