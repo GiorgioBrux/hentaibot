@@ -2,6 +2,7 @@ const obj = {
     prefix: '.',
     version: '1.0.0',
     maximages: 30,
+    notstaff_allowed: [], // Trusted people (can run .index, delete everything)
     conditions: ['png', 'jpeg', 'gif', 'jpg', 'mp4', 'imgur', 'redgif', 'gallery', 'webm'],
     bot_userid: '',
     discordToken: '',

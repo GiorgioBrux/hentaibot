@@ -210,7 +210,7 @@ export default {
 
         if (
             !msg.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR) &&
-            !constants.notstaff_allowed.includes(msg.author.id)
+            !constants.notstaff_allowed?.includes(msg.author.id)
         )
             return msg.reply({ embeds: [constants.embeds.notallowed] });
 
