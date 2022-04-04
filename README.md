@@ -24,7 +24,7 @@ It can automatically get hentai from reddit and repost them to discord channels 
 - `.report`: Report a rule-breaking image.
 
 ### Installation
-
+For WIP noob-proof instructions see [here](https://github.com/GiorgioBrux/hentaibot/wiki/How-to-Setup-%5BWIP%5D), otherwise keep reading.
 
 To use, open the `src`, and create a file called `constants-custom.js`.<br>
 This file will overwrite the default settings found in `constants-default.js`<br>
