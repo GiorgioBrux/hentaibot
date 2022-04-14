@@ -18,7 +18,14 @@ export default {
                 else {
                     // eslint-disable-next-line no-await-in-loop
                     let message = await util.submission.send({ url: data.file_url }, msg.channel);
+                    if (!message) {
+                        counter += 1;
+                        // eslint-disable-next-line no-continue
+                        continue;
+                    }
+
                     [message] = message;
+
                     // eslint-disable-next-line no-await-in-loop
                     await insert.sankaku(message, data);
                 }

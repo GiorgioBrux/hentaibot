@@ -1,10 +1,17 @@
 import { imageHash } from 'image-hash';
+import axios from 'axios';
 import constants from '../../constants.js';
 
 const obj = {
     async send(submission, msg) {
         // @TODO: Check status (404?) of pics/videos before sending
         if (!submission.url || !constants.conditions.some((e1) => submission.url.includes(e1))) return;
+
+        try {
+            await axios.get(submission.url);
+        } catch (e) {
+            return;
+        }
 
         if (submission.url.includes('https://www.reddit.com/gallery/')) {
             const array = await JSON.parse(JSON.stringify(submission.media_metadata));
