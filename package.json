@@ -27,7 +27,7 @@
         "discord.js": "^13.3.1",
         "image-hash": "^5.0.2",
         "mongodb": "^4.2.1",
-        "node-gyp": "^8.1.0",
+        "node-gyp": "^9.0.0",
         "sankaku-client": "^1.0.1",
         "snoowrap": "^1.23.0"
     },
