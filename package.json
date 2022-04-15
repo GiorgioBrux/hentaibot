@@ -29,7 +29,8 @@
         "mongodb": "^4.2.1",
         "node-gyp": "^8.1.0",
         "sankaku-client": "^1.0.1",
-        "snoowrap": "^1.23.0"
+        "snoowrap": "^1.23.0",
+        "yande-api": "git+https://github.com/GiorgioBrux/yande-api.git"
     },
     "devDependencies": {
         "@babel/cli": "^7.16.0",

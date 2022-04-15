@@ -163,6 +163,24 @@ const obj = {
                 400: `I'm sorry master, but something went wrong with the search.`
             }
         },
+        yrandom: {
+            name: 'yrandom',
+            aliases: ['yrnd'],
+            usage: ['[amount] [tags]'],
+            description: `Get a random image from yande.re. Supports tags in the form of \`yuri -video\`.`,
+            args: {
+                required: false,
+                min: 0,
+                max: 2,
+                type: ['imagenumber', 'string']
+            },
+            config: {
+                maxImages: '100'
+            },
+            errors: {
+                not_found: `I'm sorry master, but I didn't find anything. Are you sure these tags are valid?`
+            }
+        },
         random: {
             name: 'random',
             description: 'Gets a true random submission from the database with 0 reactions.',

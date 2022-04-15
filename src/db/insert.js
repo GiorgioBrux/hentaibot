@@ -35,7 +35,7 @@ export default {
                     subreddit: submission.subreddit.display_name
                 },
                 url: url || msg.attachments.values()[0]?.url || msg.content,
-                hash: hash || (await util.submission.get_hash(msg.attachments.values()[0]?.url || msg.content))
+                hash: hash || (await util.submission.get_hash(msg.attachments.first().url || msg.content))
             });
     },
     async sankaku(msg, data) {
@@ -64,7 +64,31 @@ export default {
                 },
                 url: data.file_url,
 
-                hash: await util.submission.get_hash(msg.attachments.values()[0]?.url || msg.content)
+                hash: await util.submission.get_hash(msg.attachments.first().url || msg.content)
+            });
+    },
+    async yandere(msg, data) {
+        await Mongo.db('hentaibot')
+            .collection(msg.guild.id)
+            .insertOne({
+                msgid: msg.id,
+                channelid: msg.channel.id,
+                sentby: msg.author.id,
+                reactions: {
+                    flushed: [],
+                    neutral: [],
+                    disappointed: []
+                },
+                yandere: {
+                    id: data.id,
+                    author: {
+                        id: data.creator_id,
+                        name: data.author
+                    },
+                    tags: data.tags.split(/\s+/)
+                },
+                url: data.file_url,
+                hash: await util.submission.get_hash(msg.attachments.first().url || msg.content)
             });
     }
 };
