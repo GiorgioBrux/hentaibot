@@ -1,6 +1,6 @@
 {
     "name": "hentaibot",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "hentaibot",
     "main": "src/index.js",
     "scripts": {
