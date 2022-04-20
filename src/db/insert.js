@@ -35,7 +35,7 @@ export default {
                     subreddit: submission.subreddit.display_name
                 },
                 url: url || msg.attachments.values()[0]?.url || msg.content,
-                hash: hash || (await util.submission.get_hash(msg.attachments.first().url || msg.content))
+                hash: hash || (await util.submission.get_hash(msg.attachments.first()?.url || msg.content))
             });
     },
     async sankaku(msg, data) {
@@ -64,7 +64,7 @@ export default {
                 },
                 url: data.file_url,
 
-                hash: await util.submission.get_hash(msg.attachments.first().url || msg.content)
+                hash: await util.submission.get_hash(msg.attachments.first()?.url || msg.content)
             });
     },
     async yandere(msg, data) {
@@ -88,7 +88,7 @@ export default {
                     tags: data.tags.split(/\s+/)
                 },
                 url: data.file_url,
-                hash: await util.submission.get_hash(msg.attachments.first().url || msg.content)
+                hash: await util.submission.get_hash(msg.attachments.first()?.url || msg.content)
             });
     }
 };
