@@ -21,7 +21,7 @@
     },
     "homepage": "https://github.com/GiorgioBrux/hentaibot#readme",
     "dependencies": {
-        "axios": "^0.24.0",
+        "axios": "^0.27.0",
         "deepmerge-json": "^1.2.0",
         "discord-fetch-all": "^3.0.2",
         "discord.js": "^13.3.1",
