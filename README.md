@@ -1,6 +1,6 @@
 # Hentaibot
 
-> おにいーちゃん やめて ください
+> お兄ちゃん やめて ください
 
 A WIP fully featured hentai bot for discord.<br>
 It can automatically get hentai from reddit and repost them to discord channels if an upvote threshold is reached.
